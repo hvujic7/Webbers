@@ -6,11 +6,12 @@
 
 # How to run the project:
 1. Setup https (above)
-2. Find your private IPv4 address on Windows by going to Settings > Network & Internet > Ethernet (on the left) > Select your Ethernet > Scroll down to **Properties** and check out your IPv4 address.
-3. Paste your IPv4 address (with port 8181) into server.js and scripts.js.
-4. From the root directory, run: `nodemon server.js`
-5. In your browser, go to `https://localhost:8181` or if you pasted in another private IPv4 address, go there instead.
-6. Call or answer the call.
+2. From your root directory, run `npm install` as per usual.
+3. Find your private IPv4 address on Windows by going to Settings > Network & Internet > Ethernet (on the left) > Select your Ethernet > Scroll down to **Properties** and check out your IPv4 address.
+4. Paste your IPv4 address (with port 8181) into server.js and scripts.js.
+5. From the root directory, run: `nodemon server.js`
+6. In your browser, go to `https://localhost:8181` or if you pasted in another private IPv4 address, go there instead.
+7. Call or answer the call.
 
 # Steps in a WebRTC app
 1. getUserMedia() is run - CLIENT1/Init/Caller/Offerer

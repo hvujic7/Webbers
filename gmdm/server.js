@@ -1,8 +1,13 @@
-const fs = require("fs");
-const https = require("https");
-const express = require("express");
+import fs from 'fs'
+import https from 'https'
+import express from 'express'
+import { Server } from "socket.io";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const app = express();
-const socketio = require("socket.io");
 app.use(express.static(__dirname));
 
 //we need a key and cert to run https
@@ -17,7 +22,7 @@ const cert = fs.readFileSync("cert.crt");
 const expressServer = https.createServer({ key, cert }, app);
 
 //create our socket.io server... it will listen to our express port
-const io = socketio(expressServer, {
+const io = new Server(expressServer, {
   cors: {
     origin: [
       // "https://localhost",
@@ -39,12 +44,14 @@ const offers = [
   // answer
   // answererIceCandidates
 ];
+
 const connectedSockets = [
   //username, socketId
 ];
 
 io.on("connection", (socket) => {
-  // console.log("Someone has connected");
+
+  console.log("Someone has connected");
   const userName = socket.handshake.auth.userName;
   const password = socket.handshake.auth.password;
 
