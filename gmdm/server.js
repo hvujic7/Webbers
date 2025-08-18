@@ -25,8 +25,8 @@ const expressServer = https.createServer({ key, cert }, app);
 const io = new Server(expressServer, {
   cors: {
     origin: [
-      // "https://localhost",
-      "https://192.168.0.239", //if using a phone or another computer
+      "https://localhost",
+      // "https://192.168.0.239", //if using a phone or another computer
     ],
     methods: ["GET", "POST"],
   },
@@ -49,7 +49,9 @@ const connectedSockets = [
   //username, socketId
 ];
 
+// The rest of the code here runs every time a new client connects to the server.
 io.on("connection", (socket) => {
+  
   console.log("Someone has connected");
   const userName = socket.handshake.auth.userName;
   const password = socket.handshake.auth.password;
@@ -82,29 +84,35 @@ io.on("connection", (socket) => {
       answer: null,
       answererIceCandidates: [],
     });
-    // console.log(newOffer.sdp.slice(50))
 
     // Send out to all connected sockets EXCEPT the caller.
     socket.broadcast.emit("newOfferAwaiting", offers.slice(-1));
   });
 
+  // This is ran upon someone answering an offer.
   socket.on("newAnswer", (offerObj, ackFunction) => {
+    
     console.log(offerObj);
-    //emit this answer (offerObj) back to CLIENT1
-    //in order to do that, we need CLIENT1's socketid
+    
+    // Emit this answer (offerObj) back to CLIENT1 so that we can establish a connection between both clients.
+    // In order to do that, we need CLIENT1's socketid.
     const socketToAnswer = connectedSockets.find(
       (s) => s.userName === offerObj.offererUserName
     );
+    
     if (!socketToAnswer) {
       console.log("No matching socket");
       return;
     }
-    //we found the matching socket, so we can emit to it!
+
+    // We found the matching socket, so we can emit to it!
     const socketIdToAnswer = socketToAnswer.socketId;
-    //we find the offer to update so we can emit it
+
+    // We find the offer to update so we can emit it.
     const offerToUpdate = offers.find(
       (o) => o.offererUserName === offerObj.offererUserName
     );
+
     if (!offerToUpdate) {
       console.log("No OfferToUpdate");
       return;
@@ -113,19 +121,26 @@ io.on("connection", (socket) => {
     ackFunction(offerToUpdate.offerIceCandidates);
     offerToUpdate.answer = offerObj.answer;
     offerToUpdate.answererUserName = userName;
-    //socket has a .to() which allows emiting to a "room"
-    //every socket has it's own room
+    
+    // Socket has a .to() which allows emiting to a "room".
+    // Every socket has its own room.
     socket.to(socketIdToAnswer).emit("answerResponse", offerToUpdate);
   });
 
   socket.on("sendIceCandidateToSignalingServer", (iceCandidateObj) => {
+    
+    // First we unpack.
     const { didIOffer, iceUserName, iceCandidate } = iceCandidateObj;
+    
     // console.log(iceCandidate);
+    
     if (didIOffer) {
-      //this ice is coming from the offerer. Send to the answerer
+      
+      // This ICE is coming from the offerer. Send to the answerer
       const offerInOffers = offers.find(
         (o) => o.offererUserName === iceUserName
       );
+      
       if (offerInOffers) {
         offerInOffers.offerIceCandidates.push(iceCandidate);
         // 1. When the answerer answers, all existing ice candidates are sent
@@ -161,6 +176,7 @@ io.on("connection", (socket) => {
         console.log("Ice candidate recieved but could not find offerer");
       }
     }
+    
     // console.log(offers)
   });
 });
