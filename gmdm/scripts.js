@@ -74,9 +74,9 @@ const answerOffer = async (offerObj) => {
 };
 
 const addAnswer = async (offerObj) => {
-  //addAnswer is called in socketListeners when an answerResponse is emitted.
-  //at this point, the offer and answer have been exchanged!
-  //now CLIENT1 needs to set the remote
+  // The addAnswer function is called in socketListeners when an answerResponse is emitted.
+  // At this point, the offer and answer have been exchanged!
+  // Now CLIENT1 needs to set the remote
   await peerConnection.setRemoteDescription(offerObj.answer);
   // console.log(peerConnection.signalingState)
 };
