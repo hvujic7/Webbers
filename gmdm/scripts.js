@@ -1,8 +1,11 @@
+// Random username with hardcoded password.
 const userName = "Rob-" + Math.floor(Math.random() * 100000);
 const password = "x";
+
+// Display the user's username on the HTML.
 document.querySelector("#user-name").innerHTML = userName;
 
-//if trying it on a phone, use this instead...
+// If trying it on a phone, use this instead...
 // const socket = io.connect("https://192.168.0.239:8181/", {
 const socket = io.connect("https://localhost:8181/", {
   auth: {
@@ -11,14 +14,16 @@ const socket = io.connect("https://localhost:8181/", {
   },
 });
 
+// We are going to display the audio and visual streams on these video elements.
 const localVideoEl = document.querySelector("#local-video");
 const remoteVideoEl = document.querySelector("#remote-video");
 
-let localStream; //a var to hold the local video stream
-let remoteStream; //a var to hold the remote video stream
-let peerConnection; //the peerConnection that the two clients use to talk
+let localStream; // A var to hold the local video stream.
+let remoteStream; // A var to hold the remote video stream.
+let peerConnection; // The peerConnection that the two clients use to talk.
 let didIOffer = false;
 
+// The STUN servers we will use to generate ICE candidates so that clients can find each other.
 let peerConfiguration = {
   iceServers: [
     {
@@ -27,7 +32,8 @@ let peerConfiguration = {
   ],
 };
 
-//when a client initiates a call
+// This function is ran when the client initiates a call.
+// Attached to an event handler at the bottom of this JavaScript file.
 const call = async (e) => {
   await fetchUserMedia();
 
