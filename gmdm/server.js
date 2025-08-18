@@ -1,9 +1,9 @@
-import fs from 'fs'
-import https from 'https'
-import express from 'express'
+import fs from "fs";
+import https from "https";
+import express from "express";
 import { Server } from "socket.io";
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -50,7 +50,6 @@ const connectedSockets = [
 ];
 
 io.on("connection", (socket) => {
-
   console.log("Someone has connected");
   const userName = socket.handshake.auth.userName;
   const password = socket.handshake.auth.password;
@@ -59,17 +58,21 @@ io.on("connection", (socket) => {
     socket.disconnect(true);
     return;
   }
+
+  // Every time a new client connects to the server,
+  // add the client's info to the connectedSockets list.
   connectedSockets.push({
     socketId: socket.id,
     userName,
   });
 
-  //a new client has joined. If there are any offers available,
-  //emit them out
+  // If there are offers, send them to all clients.
   if (offers.length) {
     socket.emit("availableOffers", offers);
   }
 
+  // The server received another offer.
+  // Add it to the offers array.
   socket.on("newOffer", (newOffer) => {
     offers.push({
       offererUserName: userName,
@@ -80,7 +83,8 @@ io.on("connection", (socket) => {
       answererIceCandidates: [],
     });
     // console.log(newOffer.sdp.slice(50))
-    //send out to all connected sockets EXCEPT the caller
+
+    // Send out to all connected sockets EXCEPT the caller.
     socket.broadcast.emit("newOfferAwaiting", offers.slice(-1));
   });
 
