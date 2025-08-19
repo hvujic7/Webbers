@@ -1,5 +1,5 @@
 // Random username with hardcoded password.
-const userName = "Rob-" + Math.floor(Math.random() * 100000);
+const userName = "User-" + Math.floor(Math.random() * 100000);
 const password = "x";
 
 // Display the user's username on the HTML.
@@ -35,17 +35,19 @@ let peerConfiguration = {
 // This function is ran when the client initiates a call.
 // Attached to an event handler at the bottom of this JavaScript file.
 const call = async (e) => {
+
+  // Get the caller's video.
   await fetchUserMedia();
 
   //peerConnection is all set with our STUN servers sent over
   await createPeerConnection();
 
-  //create offer time!
+  // It's time to create an offer, in the hopes that somebody answers it!
   try {
     console.log("Creating offer...");
     const offer = await peerConnection.createOffer();
     console.log(offer);
-    peerConnection.setLocalDescription(offer);
+    peerConnection.setLocalDescription(offer); // 
     didIOffer = true;
     socket.emit("newOffer", offer); //send offer to signalingServer
   } catch (err) {
@@ -81,6 +83,9 @@ const addAnswer = async (offerObj) => {
   // console.log(peerConnection.signalingState)
 };
 
+// Get the client's video and stream it to their local HTML video element.
+// We don't want audio because the client can hear themselves already lol,
+// they don't need their speakers playing back their own voice.
 const fetchUserMedia = () => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -100,9 +105,10 @@ const fetchUserMedia = () => {
 
 const createPeerConnection = (offerObj) => {
   return new Promise(async (resolve, reject) => {
-    //RTCPeerConnection is the thing that creates the connection
-    //we can pass a config object, and that config object can contain stun servers
-    //which will fetch us ICE candidates
+    
+    // RTCPeerConnection is the actual thing that creates the connection between clients.
+    // We can pass a config object into RTCPeerConnection that contains the location of STUN servers
+    // which will fetch us ICE candidates
     peerConnection = await new RTCPeerConnection(peerConfiguration);
     remoteStream = new MediaStream();
     remoteVideoEl.srcObject = remoteStream;

@@ -5,7 +5,7 @@
 4. OPTIONAL: to run it locally, update the files with your local IP
 
 # How to run the project:
-1. Setup https (above)
+1. Setup https (above) (only has to be done once)
 2. From your root directory, run `npm install` as per usual.
 3. Find your private IPv4 address on Windows by going to Settings > Network & Internet > Ethernet (on the left) > Select your Ethernet > Scroll down to **Properties** and check out your IPv4 address.
 4. Paste your IPv4 address (with port 8181) into server.js and scripts.js.
