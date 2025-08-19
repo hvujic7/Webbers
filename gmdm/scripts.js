@@ -47,35 +47,46 @@ const call = async (e) => {
     console.log("Creating offer...");
     const offer = await peerConnection.createOffer();
     console.log(offer);
-    peerConnection.setLocalDescription(offer); // 
+    peerConnection.setLocalDescription(offer); // This "offer" is what remote clients will use to try to connect to us.
     didIOffer = true;
-    socket.emit("newOffer", offer); //send offer to signalingServer
+    socket.emit("newOffer", offer); // Send this offer to the Signaling Server so that others connecting to said server may find us.
   } catch (err) {
     console.log(err);
   }
 };
 
 const answerOffer = async (offerObj) => {
+  
+  // Do the same two things we do if we were to make the call instead of answering the call,
+  // except this time we send an offerObj to the other client so they can set their remote to us.
   await fetchUserMedia();
   await createPeerConnection(offerObj);
-  const answer = await peerConnection.createAnswer({}); //just to make the docs happy
-  await peerConnection.setLocalDescription(answer); //this is CLIENT2, and CLIENT2 uses the answer as the localDesc
+
+  const answer = await peerConnection.createAnswer({}); // Just to make the docs happy
+  await peerConnection.setLocalDescription(answer); // This is CLIENT2, and CLIENT2 uses the answer as the localDesc
+  
   console.log(offerObj);
   console.log(answer);
-  // console.log(peerConnection.signalingState) //should be have-local-pranswer because CLIENT2 has set its local desc to it's answer (but it won't be)
-  //add the answer to the offerObj so the server knows which offer this is related to
+  // console.log(peerConnection.signalingState) //should be have-local-pranswer because CLIENT2 has set its local desc to its answer (but it won't be)
+  // add the answer to the offerObj so the server knows which offer this is related to
+  
   offerObj.answer = answer;
-  //emit the answer to the signaling server, so it can emit to CLIENT1
-  //expect a response from the server with the already existing ICE candidates
+  
+  // Emit the answer to the signaling server, so it can emit to CLIENT1.
+  // Expect a response from the server with the already existing ICE candidates
   const offerIceCandidates = await socket.emitWithAck("newAnswer", offerObj);
+  
+  // Add ICE Candidates to the peerConnection.
   offerIceCandidates.forEach((c) => {
     peerConnection.addIceCandidate(c);
     console.log("======Added Ice Candidate======");
   });
+  
   console.log(offerIceCandidates);
 };
 
 const addAnswer = async (offerObj) => {
+  
   // The addAnswer function is called in socketListeners when an answerResponse is emitted.
   // At this point, the offer and answer have been exchanged!
   // Now CLIENT1 needs to set the remote
@@ -110,19 +121,30 @@ const createPeerConnection = (offerObj) => {
     // We can pass a config object into RTCPeerConnection that contains the location of STUN servers
     // which will fetch us ICE candidates
     peerConnection = await new RTCPeerConnection(peerConfiguration);
+
+    // Create a new MediaStream object, something built-in to JavaScript
     remoteStream = new MediaStream();
+
+    // Set the remote video to play the remote stream from the client we are connecting to.
+    // The remoteStream at this point is empty, but we will get it later from a client connecting to us
+    // from an event found further down in this same function.
     remoteVideoEl.srcObject = remoteStream;
 
+    // Get all the tracks for the local client, mainly just video and audio tracks.
     localStream.getTracks().forEach((track) => {
-      //add localtracks so that they can be sent once the connection is established
+      
+      // The local tracks will be sent once the connection is established
       peerConnection.addTrack(track, localStream);
     });
 
+    // Just some logs to help us keep track of when the signaling state changes.
     peerConnection.addEventListener("signalingstatechange", (event) => {
       console.log(event);
       console.log(peerConnection.signalingState);
     });
 
+    // When we find an ICE Candidate, we will send it to the signaling server
+    // so that another client who wants to connect to us and can use it to send their stream over to ours.
     peerConnection.addEventListener("icecandidate", (e) => {
       console.log("........Ice candidate found!......");
       console.log(e);
@@ -135,26 +157,36 @@ const createPeerConnection = (offerObj) => {
       }
     });
 
+    // When this event called "track" gets fired, it means we got tracks from the client who
+    // wants to connect to us.
+    // In that case, add their tracks to our remote stream so we can see and hear them.
     peerConnection.addEventListener("track", (e) => {
-      console.log("Got a track from the other peer!! How excting");
+      console.log("Got a track from the other peer!! How exciting");
       console.log(e);
       e.streams[0].getTracks().forEach((track) => {
         remoteStream.addTrack(track, remoteStream);
-        console.log("Here's an exciting moment... fingers cross");
+        console.log("Here's an exciting moment... fingers crossed.");
       });
     });
 
+    // In one case, this function being called will not have an offerObj passed along with it.
+    // In that case, this if wouldn't run.
+    // That same one case is when running the function: call();
+    // It only runs when we call this function from answerOffer().
     if (offerObj) {
-      //this won't be set when called from call();
-      //will be set when we call from answerOffer()
-      // console.log(peerConnection.signalingState) //should be stable because no setDesc has been run yet
+      
+      // console.log(peerConnection.signalingState) // Should be stable because no setDesc has been run yet
       await peerConnection.setRemoteDescription(offerObj.offer);
-      // console.log(peerConnection.signalingState) //should be have-remote-offer, because client2 has setRemoteDesc on the offer
+      // console.log(peerConnection.signalingState) // Should be have-remote-offer, because client2 has setRemoteDesc on the offer
     }
+    
+    // Everything went as planned, so mark as resolved.
     resolve();
   });
 };
 
+// This function is called from socketListeners.js.
+// It passes in an iceCandidate, the one we will use to find the remote client to connect to.
 const addNewIceCandidate = (iceCandidate) => {
   peerConnection.addIceCandidate(iceCandidate);
   console.log("======Added Ice Candidate======");
