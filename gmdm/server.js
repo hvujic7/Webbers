@@ -17,11 +17,12 @@ app.use(express.static(__dirname));
 const key = fs.readFileSync("cert.key");
 const cert = fs.readFileSync("cert.crt");
 
-//we changed our express setup so we can use https
-//pass the key and cert to createServer on https
+// We changed our Express setup so we can use https.
+// Pass the key and cert to createServer on https.
 const expressServer = https.createServer({ key, cert }, app);
 
-//create our socket.io server... it will listen to our express port
+// Create our Socket.io server. 
+// It will listen to our Express port.
 const io = new Server(expressServer, {
   cors: {
     origin: [
@@ -117,7 +118,8 @@ io.on("connection", (socket) => {
       console.log("No OfferToUpdate");
       return;
     }
-    //send back to the answerer all the iceCandidates we have already collected
+
+    // Send back to the answerer all the ICE Candidates we have already collected.
     ackFunction(offerToUpdate.offerIceCandidates);
     offerToUpdate.answer = offerObj.answer;
     offerToUpdate.answererUserName = userName;
@@ -143,10 +145,11 @@ io.on("connection", (socket) => {
       
       if (offerInOffers) {
         offerInOffers.offerIceCandidates.push(iceCandidate);
-        // 1. When the answerer answers, all existing ice candidates are sent
-        // 2. Any candidates that come in after the offer has been answered, will be passed through
+        // 1. When the answerer answers, all existing ICE Candidates are sent.
+        // 2. Any candidates that come in after the offer has been answered, will be passed through.
+
         if (offerInOffers.answererUserName) {
-          //pass it through to the other socket
+          // Pass it through to the other socket.
           const socketToSendTo = connectedSockets.find(
             (s) => s.userName === offerInOffers.answererUserName
           );
@@ -160,8 +163,8 @@ io.on("connection", (socket) => {
         }
       }
     } else {
-      //this ice is coming from the answerer. Send to the offerer
-      //pass it through to the other socket
+      // This ICE is coming from the answerer. Send to .the offerer.
+      // Pass it through to the other socket
       const offerInOffers = offers.find(
         (o) => o.answererUserName === iceUserName
       );
@@ -176,7 +179,5 @@ io.on("connection", (socket) => {
         console.log("Ice candidate recieved but could not find offerer");
       }
     }
-    
-    // console.log(offers)
   });
 });
